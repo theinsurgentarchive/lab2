@@ -26,9 +26,9 @@ using namespace std;
 
 class Global {
 public:
-	int xres, yres, red, blue, green, cooldown;
+	int xres, yres, red, blue, green, cooldown, accelx, accelWait;
 	bool debug;
-    float w, dir, xpos[2], ypos[2];
+    float w, dir[2], pos[2];
 Global();
 } g;
 
@@ -82,14 +82,16 @@ Global::Global()
 	xres = 400;
 	yres = 200;
     w = 20.0f;
-    dir = 60.0f;
-	xpos[0] = 0.0f+g.w;
-    xpos[1] = g.yres/2.0f;
-    ypos[0] = 0.0f;
+    dir[0] = 60.0f;
+	dir[1] = 10.0f;
+	pos[0] = 0.0f+g.w;
+    pos[1] = g.yres/2.0f;
     red = 0;
     blue = 128;
     green = 228;
     cooldown = 25;
+	accelx = 0;
+	accelWait = 10;
     debug = false;
 }
 
@@ -235,30 +237,32 @@ int X11_wrapper::check_keys(XEvent *e)
                     g.debug = false;
                 }
                 break;
-            /* From Lab1
-			case XK_w:
-				//accelerate object
-				if(g.dir < 120.0f && g.dir > -120.0f){
-                    if(g.dir >= 0){
-                        g.dir += 5.0f;
-                    }else{
-                        g.dir -= 5.0f;
-                    }
-                }
-                break;
-            case XK_s:
-                //deaccelerate object
-                if(g.dir > 0.0f){
-                    g.dir -= 5.0f;
-                }
-                if(g.dir < 0.0f){
-                    g.dir += 5.0f;
-                }
-                break;
-            */
+			case XK_a:
+				//toggles acceleration
+				if(g.accelWait == 0){
+					if(g.accelx < 2){
+						g.accelx++;
+					}else{
+						g.accelx = 0;
+					}
+					g.accelWait = 5;
+				}
+				break;
 			case XK_Escape:
 				//Escape key was pressed
 				return 1;
+		}
+	}
+	if(e->type == KeyRelease) {
+		switch(key) {
+			case XK_a:
+				//toggles acceleration
+				if(g.accelx < 2){
+					g.accelx++;
+				}else{
+					g.accelx = 0;
+				}
+				break;
 		}
 	}
 	return 0;
@@ -282,9 +286,7 @@ void tempUp(){
             g.red += 5;
         }
         if (g.blue < 255){
-            if(g.red >= 245){
-                g.blue += 2;
-            }else if(g.blue > 0){
+            if(g.blue > 0){
                 g.blue -= 2;
             }
         }
@@ -295,27 +297,8 @@ void tempUp(){
         }    
         g.cooldown = 10;
 }
-
-void physics()
-{
-	//move the box along the x-axis
-    g.xpos[0] += g.dir;
-    //apply gravity
-    //right-side collision detection
-	if (g.xpos[0] >= (g.xres-g.w)) {
-		g.xpos[0] = (g.xres-g.w);
-		g.dir = -g.dir;
-    //color shift
-        tempUp();
-    //left-side collision detection
-    }else if (g.xpos[0] <= g.w) {
-		g.xpos[0] = g.w;
-		g.dir = -g.dir;
-    //color shift
-        tempUp();
-    //cooldown color shift
-    }else{
-        if(g.cooldown == 0){
+void tempDown(){
+	if(g.cooldown == 0){
             if(g.red > 0){
                 g.red--;
             }
@@ -330,37 +313,101 @@ void physics()
                 g.green++;
             }
         }
-        if(g.cooldown > 0){
-            g.cooldown--;
-        }
-    }
-    //color clamp
-    if(g.blue > 255){
-        g.blue--;
-    }
-    if(g.green > 255){
-        g.green--;
-    }
-    if( g.red > 255){
-        g.red--;
-    }
-    //dev tool
-    if(g.debug){
-        cout << "RGB: " << g.red << '+' << g.blue << '+' << g.green << endl;
-    }
+}
+void physics()
+{
+	if((g.xres > (g.w + 5) && g.yres > (g.w + 5))){
+		//move the box
+		g.pos[0] += g.dir[0];
+		g.pos[1] += g.dir[1];
+
+		//bottom-side collision detection
+		if (g.pos[1] >= (g.yres-g.w)) {
+			g.pos[1] = (g.yres-g.w);
+			g.dir[1] = -g.dir[1];
+		//color shift
+			tempUp();
+		//top-side collision detection
+		}else if (g.pos[1] <= g.w) {
+			g.pos[1] = g.w;
+			g.dir[1] = -g.dir[1];
+		//color shift
+			tempUp();
+		}
+		//right-side collision detection
+		if (g.pos[0] >= (g.xres-g.w)) {
+			g.pos[0] = (g.xres-g.w);
+			g.dir[0] = -g.dir[0];
+		//color shift
+			tempUp();
+		//left-side collision detection
+		}else if (g.pos[0] <= g.w) {
+			g.pos[0] = g.w;
+			g.dir[0] = -g.dir[0];
+		//color shift
+			tempUp();
+		}
+		//cooldown color shift
+		tempDown();
+		if(g.cooldown > 0){
+			g.cooldown--;
+		}
+		//color clamp
+		if(g.blue > 255){
+			g.blue--;
+		}
+		if(g.green > 255){
+			g.green--;
+		}
+		if(g.red > 255){
+			g.red--;
+		}
+		if(g.blue < 0){
+			g.blue++;
+		}
+		if(g.green < 0){
+			g.green++;
+		}
+		if(g.red < 0){
+			g.red++;
+		}
+
+		//Change acceleration
+		if(g.accelx == 1){
+			if(g.dir[0] > 0.0f){
+                g.dir[0] += 1.0f;
+            }
+            if(g.dir[0] < 0.0f){
+                g.dir[0] -= 1.0f;
+            }
+			if(g.dir[0] == 0){
+				g.dir[0] = 1.0f;
+			}
+		}else if(g.accelx == 2){
+			if(g.dir[0] > 0.0f){
+                g.dir[0] -= 1.0f;
+            }
+            if(g.dir[0] < 0.0f){
+                g.dir[0] += 1.0f;
+            } 
+		}
+		//dev tool
+		if(g.debug){
+			cout << "RGB: " << g.red << '+' << g.blue << '+' << g.green << endl;
+		}
+	}
 }
 
 void render()
 {
-	
 	//clear the window
 	glClear(GL_COLOR_BUFFER_BIT);
 	//check if box can render
-	if(g.xres > g.w){
+	if((g.xres > (g.w + 5) && g.yres > (g.w + 5))){
 	//draw the box
 		glPushMatrix();
 		glColor3ub(g.red, g.blue, g.green);
-		glTranslatef(g.xpos[0], g.xpos[1], 0.0f);
+		glTranslatef(g.pos[0], g.pos[1], 0.0f);
 		glBegin(GL_QUADS);
 			glVertex2f(-g.w, -g.w);
 			glVertex2f(-g.w,  g.w);
