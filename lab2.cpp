@@ -26,7 +26,7 @@ using namespace std;
 
 class Global {
 public:
-	int xres, yres, red, blue, green, cooldown, accelx, accelWait;
+	int xres, yres, red, blue, green, cooldown, accel, accelWait;
 	bool debug;
     float w, dir[2], pos[2];
 Global();
@@ -83,14 +83,14 @@ Global::Global()
 	yres = 200;
     w = 20.0f;
     dir[0] = 60.0f;
-	dir[1] = 10.0f;
+	dir[1] = 5.0f;
 	pos[0] = 0.0f+g.w;
     pos[1] = g.yres/2.0f;
     red = 0;
     blue = 128;
     green = 228;
     cooldown = 25;
-	accelx = 0;
+	accel = 0;
 	accelWait = 10;
     debug = false;
 }
@@ -240,10 +240,10 @@ int X11_wrapper::check_keys(XEvent *e)
 			case XK_a:
 				//toggles acceleration
 				if(g.accelWait == 0){
-					if(g.accelx < 2){
-						g.accelx++;
+					if(g.accel < 2){
+						g.accel++;
 					}else{
-						g.accelx = 0;
+						g.accel = 0;
 					}
 					g.accelWait = 5;
 				}
@@ -257,10 +257,10 @@ int X11_wrapper::check_keys(XEvent *e)
 		switch(key) {
 			case XK_a:
 				//toggles acceleration
-				if(g.accelx < 2){
-					g.accelx++;
+				if(g.accel < 2){
+					g.accel++;
 				}else{
-					g.accelx = 0;
+					g.accel = 0;
 				}
 				break;
 		}
@@ -373,23 +373,38 @@ void physics()
 		}
 
 		//Change acceleration
-		if(g.accelx == 1){
+		if(g.accel == 1){
 			if(g.dir[0] > 0.0f){
-                g.dir[0] += 1.0f;
+                g.dir[0] += 0.5f;
             }
-            if(g.dir[0] < 0.0f){
-                g.dir[0] -= 1.0f;
-            }
-			if(g.dir[0] == 0){
-				g.dir[0] = 1.0f;
+			if (g.dir[1] > 0.0f){
+				g.dir[1] += 0.5f;
 			}
-		}else if(g.accelx == 2){
-			if(g.dir[0] > 0.0f){
-                g.dir[0] -= 1.0f;
-            }
             if(g.dir[0] < 0.0f){
-                g.dir[0] += 1.0f;
-            } 
+                g.dir[0] -= 0.5f;
+            }
+			if(g.dir[1] < 0.0f){
+				g.dir[1] -= 0.5f;
+			}
+			if(g.dir[0] == 0){
+				g.dir[0] = 0.5f;
+			}
+			if(g.dir[1] == 0){
+				g.dir[1] = 0.5f;
+			}
+		}else if(g.accel == 0){
+			if(g.dir[0] > 0.0f){
+                g.dir[0] -= 0.5f;
+            }
+			if(g.dir[1] > 0.0f){
+				g.dir[1] -= 0.5f;
+			}
+            if(g.dir[0] < 0.0f){
+                g.dir[0] += 0.5f;
+            }
+			if(g.dir[1] < 0.0f){
+				g.dir[1] += 0.5f;
+			} 
 		}
 		//dev tool
 		if(g.debug){
@@ -403,7 +418,7 @@ void render()
 	//clear the window
 	glClear(GL_COLOR_BUFFER_BIT);
 	//check if box can render
-	if((g.xres > (g.w + 5) && g.yres > (g.w + 5))){
+	if((g.xres > (g.w + 10) && g.yres > (g.w + 10))){
 	//draw the box
 		glPushMatrix();
 		glColor3ub(g.red, g.blue, g.green);
