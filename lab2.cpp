@@ -1,6 +1,6 @@
 //
 //modified by: David Chu
-//date: 01/27/2025
+//date:	01/27/2025
 //
 //original author: Gordon Griesel
 //date:            2025
@@ -9,6 +9,7 @@
 //This program needs some refactoring.
 //We will do this in class together.
 //
+// <01/31/2025> --Added some text
 //
 #include <iostream>
 using namespace std;
@@ -21,6 +22,7 @@ using namespace std;
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <GL/glx.h>
+#include "./fonts.h"
 
 //some structures
 
@@ -74,6 +76,7 @@ int main()
 		x11.swapBuffers();
 		usleep(200);
 	}
+	cleanup_fonts();
 	return 0;
 }
 
@@ -135,7 +138,7 @@ void X11_wrapper::set_title()
 {
 	//Set the window title bar.
 	XMapWindow(dpy, win);
-	XStoreName(dpy, win, "3350 Lab-1");
+	XStoreName(dpy, win, "3350 Lab-1:	Esc to exit");
 }
 
 bool X11_wrapper::getXPending()
@@ -279,6 +282,9 @@ void init_opengl(void)
 	glOrtho(0, g.xres, 0, g.yres, -1, 1);
 	//Set the screen background color
 	glClearColor(0.1, 0.1, 0.1, 1.0);
+	//Do this to enable fonts
+	glEnable(GL_TEXTURE_2D);
+	initialize_fonts();
 }
 
 void tempUp(){
@@ -417,9 +423,9 @@ void render()
 {
 	//clear the window
 	glClear(GL_COLOR_BUFFER_BIT);
-	//check if box can render
+	//check if everything can render
 	if((g.xres > (g.w + 50) && g.yres > (g.w + 50))){
-	//draw the box
+	//renders box
 		glPushMatrix();
 		glColor3ub(g.red, g.blue, g.green);
 		glTranslatef(g.pos[0], g.pos[1], 0.0f);
@@ -430,5 +436,16 @@ void render()
 			glVertex2f( g.w, -g.w);
 		glEnd();
 		glPopMatrix();
+	//Prints text
+		Rect r;
+	    r.bot = g.yres - 20;
+	    r.left = 10;
+	    r.center = 0;
+	    ggprint8b(&r, 16, 0x00ff0000, "3350 Lab 2");
+	    ggprint8b(&r, 16, 0x00ffff00, "X-Speed: %0.2f", g.dir[0]);
+	    ggprint8b(&r, 16, 0x00ffff00, "Y-Speed: %0.2f", g.dir[1]);
+		ggprint8b(&r, 16, 0x00ffff00, "Current Mode: %i", g.accel);
+		ggprint8b(&r, 16, 0x00ffff00, "Press 'a' to switch modes");
+	    ggprint8b(&r, 16, 0x00ffff00, "Press 'Esc' to exit");
 	}
 }
