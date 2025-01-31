@@ -418,7 +418,7 @@ void render()
 	//clear the window
 	glClear(GL_COLOR_BUFFER_BIT);
 	//check if box can render
-	if((g.xres > (g.w + 10) && g.yres > (g.w + 10))){
+	if((g.xres > (g.w + 50) && g.yres > (g.w + 50))){
 	//draw the box
 		glPushMatrix();
 		glColor3ub(g.red, g.blue, g.green);
