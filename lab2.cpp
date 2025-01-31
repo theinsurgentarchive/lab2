@@ -444,8 +444,8 @@ void render()
 	    ggprint8b(&r, 16, 0x00ff0000, "3350 Lab 2");
 	    ggprint8b(&r, 16, 0x00ffff00, "X-Speed: %0.2f", g.dir[0]);
 	    ggprint8b(&r, 16, 0x00ffff00, "Y-Speed: %0.2f", g.dir[1]);
-		ggprint8b(&r, 16, 0x00ffff00, "Current Mode: %i", g.accel);
-		ggprint8b(&r, 16, 0x00ffff00, "Press 'a' to switch modes");
+	    ggprint8b(&r, 16, 0x00ffff00, "Current Mode: %i", g.accel);
+	    ggprint8b(&r, 16, 0x00ffff00, "Press 'a' to switch modes");
 	    ggprint8b(&r, 16, 0x00ffff00, "Press 'Esc' to exit");
 	}
 }
